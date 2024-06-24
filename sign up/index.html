@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>CareBridge</title>
+    <link rel="icon" href="images/fav.png" type="image/png" sizes="16x16">
+    <link rel="shortcut icon" href="assets/images/fav.png" type="image/x-icon">
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i&display=swap"
+        rel="stylesheet">
+    <link rel="shortcut icon" href="assets/images/fav.jpg">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/animate.css">
+    <link rel="stylesheet" href="assets/plugins/slider/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="assets/plugins/slider/css/owl.theme.default.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/style.css" />
+</head>
+
+<body class="form-login-body">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 mx-auto login-desk">
+                <div class="row">
+                    <div class="col-md-7 detail-box">
+                        <div class="detailsh">
+                            <img class="help h-100" src="assets/images/loginvector.png" alt="">
+                        </div>
+                    </div>
+                    <div class="col-md-5 loginform">
+                        <h4>Welcome</h4>
+                        <p>Signup your Account</p>
+                        <div class="login-det">
+                            <div class="form-row">
+                                <label for="">Username</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="basic-addon1">
+                                            <i class="far fa-user"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" id="email" class="form-control" placeholder="Enter Email"
+                                        aria-label="Username" aria-describedby="basic-addon1">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="">Profile Name</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="basic-addon1">
+                                            <i class="far fa-user"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" id="firstName" class="form-control" placeholder="First Name"
+                                        aria-label="First Name" aria-describedby="basic-addon1">
+                                    <input type="text" id="lastName" class="form-control" placeholder="Last Name"
+                                        aria-label="Last Name" aria-describedby="basic-addon1">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="userType">User Type</label>
+                                <select id="userType" class="form-control" onchange="toggleQualificationsField()">
+                                    <option value="patient">Patient</option>
+                                    <option value="doctor">Doctor</option>
+                                </select>
+                            </div>
+                            <div class="form-row" id="qualificationsField" style="display: none;">
+                                <label for="qualifications">Qualifications</label>
+                                <input type="text" id="qualifications" class="form-control"
+                                    placeholder="Enter Qualifications">
+                            </div>
+                            <div class="form-row">
+                                <label for="">Password</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="basic-addon1">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                    </div>
+                                    <input type="password" id="password" class="form-control"
+                                        placeholder="Enter Password" aria-label="Username"
+                                        aria-describedby="basic-addon1">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label for="">Re-Enter Password</label>
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="basic-addon1">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                    </div>
+                                    <input type="password" id="password1" class="form-control"
+                                        placeholder="Enter Password" aria-label="Username"
+                                        aria-describedby="basic-addon1">
+                                </div>
+                            </div>
+                            <button id="signupButton" class="btn btn-sm btn-primary">Register</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#signupButton").click(function () {
+                var firstName = $("#firstName").val();
+                var lastName = $("#lastName").val();
+                var email = $("#email").val();
+                var password = $("#password").val();
+                var userType = $("#userType").val();
+                var qualifications = $("#qualifications").val();
+
+                // Create a FormData object
+                var formData = new FormData();
+                formData.append('firstName', firstName);
+                formData.append('lastName', lastName);
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('userType', userType);
+                formData.append('qualifications', qualifications);
+
+                // Make the AJAX request to the signup endpoint
+                $.ajax({
+                    type: "POST",
+                    url: "http://localhost:3000/signup",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        console.log(response);
+                        window.location.href = "../login-form-design/index.html";
+                    },
+                    error: function (error) {
+                        console.error(error);
+                        alert("Signup failed. Please try again.");
+                    },
+                });
+            });
+        });
+
+        function toggleQualificationsField() {
+            var userType = document.getElementById('userType').value;
+            var qualificationsField = document.getElementById('qualificationsField');
+
+            if (userType === 'doctor') {
+                qualificationsField.style.display = 'block';
+            } else {
+                qualificationsField.style.display = 'none';
+            }
+        }
+    </script>
+    <script src="assets/js/jquery-3.2.1.min.js"></script>
+    <script src="assets/js/popper.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/plugins/scroll-fixed/jquery-scrolltofixed-min.js"></script>
+    <script src="assets/plugins/slider/js/owl.carousel.min.js"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+
+</html>
