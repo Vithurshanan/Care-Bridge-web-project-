@@ -1,32 +1,14 @@
-Care Bridge Web Project
-The Care Bridge Web Project is a comprehensive healthcare management system designed to bridge the gap between patients and healthcare providers. The project aims to simplify the process of accessing healthcare services and managing patient data efficiently. Built using modern web technologies, the platform offers a user-friendly interface for patients, doctors, and administrators.
+Project Title: Care Bridge - A Web Platform for Cancer Patient Support
 
-Key Features:
+Project Description:
 
-  Patient Registration & Management:
-     Users can register as patients, manage their personal health information, and book appointments with doctors.
+The Care Bridge project is a web-based platform designed to support cancer patients by facilitating better communication between patients and healthcare professionals. This project serves as a tool for gathering crucial medical information directly from doctors, helping patients manage their treatment journeys with greater ease and transparency.
 
-  Doctor’s Dashboard:
-     Doctors can manage their schedules, view patient details, and update health records for seamless consultation experiences.
-     
-   Appointment Scheduling:
-    An intuitive system that allows patients to book appointments with available doctors based on their specializations and availability.
-    
-   Medical Records System:
-    A secure and centralized system for storing, accessing, and updating patient health records, ensuring privacy and confidentiality.
-    
-   Prescription Management:
-    Doctors can issue and track prescriptions online, and patients can view and download their prescriptions anytime.
-    
-   Feedback & Support:
-    Patients can provide feedback on services and seek customer support through a dedicated contact system.
-    
-   Technologies Used:
-     Frontend: HTML, CSS, JavaScript for creating an interactive and responsive user interface.
-     Backend: PHP for server-side logic and MySQL for database management, ensuring robust data handling.
-     API Integration: Integration with third-party APIs to facilitate real-time healthcare updates and services.
+The platform is built using the MERN (MongoDB, Express, React, Node.js) stack for the back end, ensuring a scalable and robust infrastructure for handling data and user interactions. On the front end, technologies such as HTML, CSS, and JavaScript are employed to create an intuitive, user-friendly interface.
 
-     
-Objective:
-The Care Bridge project is designed to enhance the efficiency of healthcare delivery by making it easier for patients and healthcare providers to interact, reducing administrative overhead, and ensuring timely access to medical care.
+Key features include:
 
+Secure channels for doctors to share medical updates, test results, and treatment plans.
+A patient dashboard where users can track their progress and access personalized health information.
+Interactive elements for better engagement between patients and healthcare providers.
+This project was developed as part of a university initiative, aiming to combine technological innovation with compassionate healthcare solutions. Care Bridge strives to bridge the gap between patients and doctors, ensuring timely and effective communication during critical stages of cancer treatment.
