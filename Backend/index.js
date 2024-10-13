@@ -1,31 +1,51 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const db = require('./db'); // Import the MongoDB connection setup
-const User = require('./models/User'); // Import the User model
+const mongoose = require('mongoose');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('./models/User');
+const Post = require('./models/Post');
+const db = require('./db'); // Assuming this sets up MongoDB connection
+
 const app = express();
-const Post = require('./models/posts');
-const rawBody = require('raw-body');
-
-app.use(cors());
-
 const port = 3000;
 
+// Middleware
+app.use(cors());
 app.use(bodyParser.json());
+
+// Secret key for JWT (move to environment variables in production)
+const JWT_SECRET = 'your-secret-key';
 
 // Signup endpoint
 app.post('/signup', async (req, res) => {
   const { firstName, lastName, email, password, userType, qualifications } = req.body;
 
+  // Validate request body
+  if (!firstName || !lastName || !email || !password || !userType) {
+    return res.status(400).json({ message: 'All required fields must be provided.' });
+  }
+
   try {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
-
     if (existingUser) {
       return res.status(400).json({ message: 'User with this email already exists.' });
     }
 
-    const newUser = new User({ firstName, lastName, email, password, userType, qualifications });
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      userType,
+      qualifications
+    });
 
     // Save the user to the database
     await newUser.save();
@@ -38,29 +58,30 @@ app.post('/signup', async (req, res) => {
 });
 
 // Login endpoint
-const jwt = require('jsonwebtoken');
-
 app.post('/login', async (req, res) => {
-  const { email: userEmail, password } = req.body;
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
 
   try {
     // Find the user in the database
-    const user = await User.findOne({ email: userEmail });
+    const user = await User.findOne({ email });
 
-    // Check if the user exists and the password matches
-    if (user && user.password === password) {
-      // Do not populate in the login route, especially for sensitive information
-      // Instead, only send necessary information and avoid exposing sensitive fields
-      const { firstName, lastName, email } = user;
-
-      // Create a JWT token
+    if (user && (await bcrypt.compare(password, user.password))) {
+      // Create JWT token
       const token = jwt.sign(
-        { email, firstName, lastName },
-        'your-secret-key', // Secret key (should be stored in a secure way, not hard-coded)
-        { expiresIn: '1h' } // Token expiration time
+        { userId: user._id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: '1h' }
       );
 
-      res.json({ message: 'Login successful.', user: { firstName, lastName, email }, token });
+      res.json({
+        message: 'Login successful.',
+        token,
+        user: { firstName: user.firstName, lastName: user.lastName, email: user.email }
+      });
     } else {
       res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -70,35 +91,100 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Route to upload a post
-app.post('/upload', async (req, res) => {
-  // Your code for uploading a post
+// Authentication middleware to protect routes
+const authenticateMiddleware = (req, res, next) => {
+  const token = req.headers['authorization'];
+
+  // Ensure the token is prefixed with 'Bearer'
+  if (!token || !token.startsWith('Bearer ')) {
+    return res.status(403).json({ message: 'No or invalid token provided.' });
+  }
+
+  const actualToken = token.split(' ')[1]; // Extract token after 'Bearer'
+
+  jwt.verify(actualToken, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({ message: 'Failed to authenticate token.' });
+    }
+    req.userId = decoded.userId;
+    next();
+  });
+};
+
+// Upload a post (protected route)
+app.post('/upload', authenticateMiddleware, async (req, res) => {
+  const { title, content } = req.body;
+
+  // Validate request body
+  if (!title || !content) {
+    return res.status(400).json({ message: 'Title and content are required.' });
+  }
+
+  try {
+    const newPost = new Post({ title, content, author: req.userId });
+    await newPost.save();
+    res.status(201).json({ message: 'Post uploaded successfully.', post: newPost });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error uploading post.' });
+  }
 });
 
-// Route to like a post
-app.post('/like/:_id', async (req, res) => {
-  // Your code for liking a post
+// Like a post (protected route)
+app.post('/like/:_id', authenticateMiddleware, async (req, res) => {
+  const postId = req.params._id;
+
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found.' });
+    }
+
+    post.likes += 1;
+    await post.save();
+
+    res.status(200).json({ message: 'Post liked.', post });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error liking post.' });
+  }
 });
 
-// Route to fetch posts
+// Fetch all posts
 app.get('/posts', async (req, res) => {
-  // Your code to fetch posts
+  try {
+    const posts = await Post.find().populate('author', 'firstName lastName');
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching posts.' });
+  }
 });
 
-// Middleware to authenticate JWT token
-// Authentication middleware
-async function authenticateMiddleware(req, res, next) {
-  // Your authentication logic here
-}
-
-// Route to get user's profile picture
+// Fetch user's profile picture (protected route)
 app.get('/getProfilePicture', authenticateMiddleware, async (req, res) => {
-  // Your code to get user's profile picture
+  try {
+    const user = await User.findById(req.userId);
+    if (!user || !user.profilePicture) {
+      return res.status(404).json({ message: 'Profile picture not found.' });
+    }
+
+    res.status(200).json({ profilePicture: user.profilePicture });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching profile picture.' });
+  }
 });
 
-// Route to fetch doctors
+// Fetch doctors
 app.get('/doctors', async (req, res) => {
-  // Your code to fetch doctors
+  try {
+    const doctors = await User.find({ userType: 'doctor' });
+    res.status(200).json(doctors);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching doctors.' });
+  }
 });
 
 // Start the server
